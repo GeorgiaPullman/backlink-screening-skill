@@ -1,0 +1,7 @@
+interface:
+  display_name: "外链筛选"
+  short_description: "三轮外链筛选、复筛与人工站点评估流程"
+  default_prompt: "Use $backlink-screening to confirm default screening rules, run the backlink list through all requested rounds, organize each run folder, and deliver every round's result files."
+
+policy:
+  allow_implicit_invocation: true
