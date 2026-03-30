@@ -1,56 +1,55 @@
 ---
 name: backlink-screening
-description: "Use when the user provides a backlink or domain CSV/list and wants it screened through a repeatable three-round workflow: first-round Semrush bulk analysis, second-round domain overview review, and optional third-round manual site quality review with organized result files."
+description: "当用户提供外链或域名列表并要求筛选时使用。该技能会按固定的三轮流程完成外链筛选：第一轮 Semrush 批量分析，第二轮域名概览复筛，以及可选的第三轮人工开站复核，并整理好每一轮结果文件。"
 ---
 
-# Backlink Screening
+# 外链筛选
 
-Use this skill when the user sends a backlink list, domain list, or CSV and asks to filter, review, or screen candidates for outreach or link building.
+当用户发送外链列表、域名列表或 CSV，并要求筛选、复筛、审核候选站点时，使用这个技能。
 
-This skill is for repeated operational work. The agent should run the requested rounds end to end, organize outputs into a dedicated run folder, troubleshoot ordinary blockers, and return every round's result files to the user.
+这个技能用于高频重复任务。Agent 应尽量把用户要求的轮次完整跑完，主动处理常见卡点，把每次运行的文件整理到独立目录中，并在结束时把每一轮结果文件都交付给用户，而不是只给最终名单。
 
-## Trigger Conditions
+## 触发条件
 
-Trigger this skill when the user:
-- uploads or mentions a CSV of backlinks or domains
-- says things like `筛选外链`、`筛选域名`、`跑一轮外链筛选`、`按默认规则筛选`
-- wants Semrush-based filtering plus manual website review
-- asks to continue from round 1 to round 2 or round 3
+在以下场景触发：
+- 用户上传或提到一份外链 CSV 或域名 CSV
+- 用户说“筛选外链”“筛选域名”“跑一轮外链筛选”“按默认规则筛选”
+- 用户要做基于 Semrush 的筛选，并继续做人工网站审核
+- 用户要求从第一轮继续跑到第二轮或第三轮
 
-Do not use this skill for general SEO discussion with no concrete list to process.
+如果只是泛泛讨论 SEO、没有具体列表要处理，不要触发这个技能。
 
-## Required Tools
+## 必需工具
 
-- Use [$playwright-stealth-cli](/Users/mac/.codex/skills/playwright-stealth-cli/SKILL.md) for all browser automation.
-- Stay in CLI workflow. Do not switch to ordinary Playwright workflow.
-- Use branded Chrome with `--channel chrome`, not default Chromium.
-- Prefer a persistent Chrome profile stored in the current project directory.
+- 所有浏览器自动化都使用 [$playwright-stealth-cli](/Users/mac/.codex/skills/playwright-stealth-cli/SKILL.md)
+- 全程走 CLI 工作流，不要切换到普通 Playwright 工作流
+- 必须使用品牌版 Chrome，也就是 `--channel chrome`，不要用默认 Chromium
+- 优先使用保存在当前项目目录下的持久化 Chrome profile
 
-## Required Platform
+## 固定平台
 
-This workflow must use the `3ue` platform for Semrush access.
+本工作流必须使用 `3ue` 平台中的 Semrush。
 
-Required platform URLs:
-- login/home: `https://dash.3ue.com/zh-Hans/#/page/m/home`
-- Semrush entry: `https://sem.3ue.com/`
+固定地址：
+- 登录首页：`https://dash.3ue.com/zh-Hans/#/page/m/home`
+- Semrush 入口：`https://sem.3ue.com/`
 
-Do not replace `3ue` with another Semrush mirror or another SEO platform unless the user explicitly changes the requirement.
+除非用户明确要求更换平台，否则不要擅自改成别的 Semrush 镜像或其他 SEO 平台。
 
-## Credential Handling
+## 账号凭证处理
 
-On the first run for a given workspace or project:
-- ask the user for the `3ue` account and password before starting
-- do not assume credentials
+对于某个项目的首次运行：
+- 开始前先向用户索要 `3ue` 的账号和密码
+- 不要自行假设账号密码
 
-After the user provides credentials:
-- save them for reuse in a local project credential file so later runs do not need to ask again
-- always use the fixed project-local path `.auth/3ue-credentials.json`
-- keep the saved credentials tied to this workflow and reuse them on future runs automatically
+用户提供凭证后：
+- 保存到项目内的固定文件 `.auth/3ue-credentials.json`
+- 后续同项目运行时优先复用，不要每次都重新询问
 
-Credential file rules:
-- create the `.auth/` directory under the current project if it does not exist
-- save credentials in JSON format
-- use this structure:
+凭证文件规则：
+- 如果当前项目下没有 `.auth/` 目录，就先创建
+- 凭证必须保存为 JSON
+- 固定结构如下：
 
 ```json
 {
@@ -62,15 +61,14 @@ Credential file rules:
 }
 ```
 
-- on later runs, read `.auth/3ue-credentials.json` first
-- if the file exists and login succeeds, do not ask the user again
-- if the file exists but login fails, ask the user for updated credentials and overwrite the file
+- 后续运行先读取 `.auth/3ue-credentials.json`
+- 如果文件存在且登录成功，不要再次询问用户
+- 如果文件存在但登录失败，再向用户要新凭证并覆盖原文件
+- 如果用户已经在同一项目里给过凭证，除非登录失败或用户要求更换，否则不要再问
 
-If the user already provided credentials earlier in the same project, do not ask again unless login fails or the user requests a change.
+## 默认规则确认
 
-## Default Confirmation
-
-If the user does not provide explicit screening rules, pause before running and ask:
+如果用户没有明确给出筛选规则，先暂停执行并询问：
 
 `是否使用默认规则筛选？默认规则如下：`
 
@@ -78,181 +76,179 @@ If the user does not provide explicit screening rules, pause before running and 
 - 第二轮：`Authority Score >= 35`，`自然流量 >= 100000`，不能标记 `链接农场`，不能标记 `些许垃圾迹象`
 - 第三轮：人工开站复核，结论为 `通过 / 拒绝 / 存疑`
 
-If the user provides custom rules, use them instead of defaults. Do not silently mix custom rules with default rules unless the user explicitly asks for that.
+如果用户给了自定义规则，就按用户规则执行。除非用户明确要求“在默认规则基础上追加”，否则不要把自定义规则和默认规则混用。
 
-## Run Folder Organization
+## 运行目录整理
 
-Before running, create a dedicated run folder inside the current project. Use a clear timestamped name, for example:
+每次开始运行前，都要在当前项目下建立一个独立的运行目录。命名建议带日期或时间戳，例如：
 
-- `runs/2026-03-27-backlink-screening/`
+- `runs/2026-03-30-backlink-screening/`
 
-Use subfolders:
+建议固定子目录：
 - `input/`
 - `round1-bulk-analysis/`
 - `round2-domain-overview/`
 - `round3-site-review/`
 - `final/`
 
-Copy or generate working files into the run folder rather than overwriting the user's original file. Keep raw exports and filtered outputs from every round.
+不要覆盖用户原始文件。工作文件、导出文件、筛选结果都应放进对应的 run 目录中。
 
-## Workflow
+## 工作流
 
-### 1. Intake
+### 1. 输入检查
 
-1. Read the user-provided file or list.
-2. Identify whether the input is backlinks, root domains, or URLs that need domain extraction.
-3. Check whether a saved `3ue` credential file already exists in the current project.
-4. The credential file path must be `.auth/3ue-credentials.json`.
-5. If the credential file does not exist, ask the user for the `3ue` account and password, then save them in that JSON file for reuse.
-6. If the credential file exists, try it first.
-7. If login fails with saved credentials, ask the user for updated credentials and overwrite the file.
-8. Confirm rules if the user did not provide them.
-9. Count valid rows.
-10. If the first-round bulk analysis input exceeds `100` entries, split it into batches of at most `100`.
+1. 读取用户提供的文件或列表
+2. 判断输入是外链、根域名，还是需要先从 URL 提取域名
+3. 检查当前项目是否已有 `.auth/3ue-credentials.json`
+4. 如果没有，就向用户要 `3ue` 账号密码并保存
+5. 如果有，就优先尝试现有凭证
+6. 如果现有凭证登录失败，再向用户要新的并覆盖
+7. 如果用户没给筛选规则，先确认是否使用默认规则
+8. 统计有效条数
+9. 如果第一轮输入超过 `100` 条，先拆分成多个不超过 `100` 条的批次
 
-### 2. Round 1: Semrush Bulk Analysis
+### 2. 第一轮：Semrush 批量分析
 
-Use Semrush `流量与市场 -> 行业与批量分析`.
+使用 Semrush 的 `流量与市场 -> 行业与批量分析`。
 
-Workflow:
-1. Open the platform with persistent Chrome profile in the project directory.
-2. Log in to `3ue` with the saved project credentials if needed.
-3. Navigate to the batch analysis page.
-4. Upload the current batch CSV.
-5. Treat upload as successful only if the left-side rich input area has been auto-filled with domains.
-6. Do not trust the right-side `文件已上传` message by itself.
-7. After the left-side area is filled, click the rich input area once to trigger focus.
-8. Only after that, click `分析`.
-9. Wait for readable results.
-10. Export raw batch results.
-11. Merge all batch results if there are multiple batches.
-12. Apply round-1 filtering.
+执行顺序：
+1. 用当前项目下的持久化 Chrome profile 打开平台
+2. 如有需要，用保存的 `3ue` 凭证登录
+3. 进入批量分析页面
+4. 上传当前批次 CSV
+5. 只有当左侧富文本输入区已经自动回填域名时，才算上传真正成功
+6. 不要只看右侧 `文件已上传`
+7. 左侧回填后，必须再点击一次左侧富文本输入区，触发 `focus`
+8. 只有完成上一步后，才点击 `分析`
+9. 等待结果表变成可读状态
+10. 导出当前批次原始结果
+11. 如果有多个批次，合并所有批次结果
+12. 按第一轮规则筛选
 
-Round-1 default rule:
+第一轮默认规则：
 - `访问量 >= 35000`
 
-Round-1 hard requirements:
-- if left-side domains did not appear, do not click `分析`; re-upload or reload first
-- if a file has more than `100` entries, split it before submission
-- if tab switching happened, re-check the current page before clicking anything
+第一轮硬规则：
+- 如果左侧没有回填域名，不要点 `分析`，先重传或刷新
+- 如果文件超过 `100` 条，必须先拆分
+- 如果中途切过标签页，继续点击前先重新确认当前页面
 
-### 3. Round 2: Domain Overview Review
+### 3. 第二轮：域名概览复筛
 
-Only use the `域名概览` page.
+第二轮只看 `域名概览` 页面。
 
-Workflow:
-1. Take the domains that passed round 1.
-2. Open each domain in `域名概览`.
-3. Review one domain at a time.
-4. Record the result immediately after each domain.
-5. Read:
+执行顺序：
+1. 取第一轮通过的域名
+2. 逐个打开 `域名概览`
+3. 一次只看一个域名
+4. 每看完一个域名，立即记录结果
+5. 读取：
    - `Authority Score`
    - `自然流量`
-   - risk markers shown near the `Authority Score` block
-6. Use only what is shown on the `域名概览` page, especially the `Authority Score` block, to decide risk markers.
-7. Filter according to the active round-2 rule set.
+   - `Authority Score` 区块附近的风险标记
+6. 风险标记只以 `域名概览` 页面实际显示内容为准，不要跳去别的页面找
+7. 按第二轮规则筛选
 
-Round-2 default rule:
+第二轮默认规则：
 - `Authority Score >= 35`
 - `自然流量 >= 100000`
-- no `链接农场`
-- no `些许垃圾迹象`
+- 不能标记 `链接农场`
+- 不能标记 `些许垃圾迹象`
 
-### 4. Round 3: Manual Site Review
+### 4. 第三轮：人工开站复核
 
-Take the websites that passed round 2 and manually inspect the live sites.
+取第二轮通过的网站，直接打开真实网站做人工复核。
 
-Workflow:
-1. Open the homepage.
-2. Open at least two more internal pages.
-3. Prefer a mix of:
-   - article/content page
-   - category/archive page
-   - About, Contact, or Privacy page
-4. Judge the site as one of:
+执行顺序：
+1. 打开首页
+2. 再打开至少两个内页
+3. 优先组合：
+   - 文章页或内容页
+   - 栏目页或归档页
+   - About、Contact、Privacy 这类正规页面
+4. 每个网站最终只给出一个结论：
    - `通过`
    - `拒绝`
    - `存疑`
-5. Record visited pages and notes immediately after each site.
-6. Make sure at least one checked page provides a meaningful recency signal, such as a publish date or update date, whenever the site exposes one.
+5. 每检查完一个网站，立刻记录查看页面和备注
+6. 只要网站提供了发布时间或更新时间，至少要在三页里确认一次“最近是否仍有更新”
 
-Round-3 review criteria:
-- site opens normally
-- homepage and inner pages look like one coherent operating website
-- content feels like real articles/news, not stitched filler
-- site has basic legitimate pages such as About, Contact, Privacy
-- site appears recently updated
-- topic and sections are coherent instead of random
+第三轮重点判断：
+- 网站能否正常打开
+- 首页和另外两个页面是否像同一个正常运营的网站
+- 内容是否像真实文章、资讯或工具页面，而不是随便拼装的内容
+- 是否有 About、Contact、Privacy 等基础正规页面
+- 是否最近还有更新
+- 栏目和主题是否清晰，而不是东一块西一块
 
-Likely `通过`:
-- clear brand or positioning
-- homepage, category, and article pages feel consistent
-- readable content that does not look mass-generated
-- recent updates
-- looks like a living news, magazine, niche, tool, or small content site
+容易判为 `通过`：
+- 品牌或定位清晰
+- 首页、栏目页、文章页风格一致
+- 内容正常、可读，不像批量生成
+- 最近还有更新
+- 看起来像真实运营的新闻站、杂志站、行业站、工具站或小型内容站
 
-Likely `拒绝`:
-- obvious content farm or fake news/magazine site
-- extremely mixed topics with no positioning
-- heavy celebrity/net worth/family gossip filler
-- adult, gambling, or gray-market content
-- obvious paid-post or sponsored soft-article site
-- repeated page titles/body templates
-- looks like lead-gen, sales landing pages, or low-trust utility shells
+容易判为 `拒绝`：
+- 明显是内容农场、伪新闻站、伪杂志站
+- 栏目特别杂，没有清晰定位
+- 大量人物资料、净资产、八卦、家庭关系等低质量拼凑内容
+- 成人、擦边、博彩、灰产内容明显
+- 明显是卖稿站、投稿站、赞助软文站
+- 页面标题和正文大量重复，模板痕迹很重
+- 更像导流站、销售页、工具落地页，而不是内容站
 
-Likely `存疑`:
-- site does not open
-- stuck on CAPTCHA or Cloudflare checks
-- too little content to judge
-- suspicious but not enough evidence
-- unstable site state prevents review
+容易判为 `存疑`：
+- 网站打不开
+- 一直卡在人机验证或 Cloudflare 验证
+- 内容太少，无法判断
+- 看起来有问题，但证据不够
+- 网站状态不稳定，无法稳定完成检查
 
-## Expected Agent Behavior
+## Agent 行为要求
 
-- Run the full workflow end to end when feasible.
-- Do not stop at planning if the user asked to run the task.
-- Troubleshoot ordinary blockers yourself:
-  - stale refs
-  - tab switching issues
-  - upload worked but batch input did not focus
-  - slow page loads
-  - retriable navigation issues
-- After `tab-select`, verify the current page again before acting. Prefer `snapshot`, `screenshot`, or URL confirmation.
-- Prefer CLI-first recovery tactics before asking the user for help.
-- If a platform limitation or account restriction genuinely blocks progress, explain the blocker briefly and state exactly what was already completed.
-- Close the CLI-controlled browser at the end and verify with `playwright-stealth list` that the session is `closed`.
+- 只要用户要求执行，就尽量把整个任务完整跑完，不要停在分析阶段
+- 遇到常见问题优先自己排查解决，例如：
+  - 元素 ref 失效
+  - 标签页切换后页面状态不同步
+  - 文件上传了但富文本输入区没获得焦点
+  - 页面加载慢
+  - 可重试的导航失败
+- 在 `tab-select` 之后，继续操作前先重新确认当前页面。优先使用 `snapshot`、`screenshot` 或 URL 确认
+- 优先用 CLI 范式修复问题，再考虑向用户求助
+- 如果是真正的平台限制或账号限制挡住了流程，再简洁说明卡点以及已经完成到哪一步
+- 任务结束后必须关闭 CLI 控制的浏览器，并用 `playwright-stealth list` 确认会话状态为 `closed`
 
-## Known Pitfalls
+## 已知坑点
 
-- `tab-select` can succeed while the visible page state is still stale. Reconfirm URL or page content before clicking.
-- On the round-1 page, `文件已上传` alone is not enough. The left-side rich input must show the domains, or analysis may return no results.
-- The round-1 rich input behaves like a rich-text/tag editor. After upload and left-side fill, click it once to trigger focus before clicking `分析`.
-- Use the same persistent profile for the whole run. Mixing fresh sessions increases login drift and inconsistent page behavior.
-- `3ue` may show a device-limit page. If that happens, check for leftover sessions first, then ask the user to free another device only if the limit is still active.
-- Red console or network errors do not automatically mean the task failed; judge by whether the page produced the required result.
+- `tab-select` 成功，不代表当前可操作页面已经同步；继续点击前要重新确认 URL 或页面内容
+- 第一轮页面中，仅看到 `文件已上传` 还不够；左侧富文本区域必须看到域名回填，否则分析可能返回空结果
+- 第一轮左侧输入区本质上是富文本/标签编辑器；上传并回填后，必须额外点一下输入区再点 `分析`
+- 整个任务尽量复用同一个持久化 profile；频繁换新会话容易导致登录态漂移和页面行为不一致
+- `3ue` 可能出现“同一时间设备数量限制”；这时先检查是否有残留会话，再决定是否需要让用户关闭其他设备
+- 控制台或网络里的红色报错不等于任务失败，最终还是看页面有没有产出所需结果
 
-## Output Requirements
+## 输出要求
 
-Always deliver all round outputs, not only the final file.
+不要只交付最终结果，必须把每一轮结果都给用户。
 
-At minimum, provide:
-- round-1 raw or merged result file
-- round-1 filtered result file
-- round-2 full review result file
-- round-2 filtered result file
-- round-3 full manual review result file if round 3 was run
-- final shortlist file
+至少要包含：
+- 第一轮原始或合并结果文件
+- 第一轮筛选结果文件
+- 第二轮完整复筛结果文件
+- 第二轮通过结果文件
+- 如果跑了第三轮，还要给第三轮完整人工复核结果文件
+- 最终 shortlist 文件
 
-In the response, summarize:
-- which rules were used
-- total counts per round
-- pass counts per round
-- any missing or unreadable sites
+答复用户时还要总结：
+- 本次使用了哪套规则
+- 每一轮总数量
+- 每一轮通过数量
+- 是否有打不开、无数据或无法判断的网站
 
-## Notes
+## 备注
 
-- Keep browser profile under the current project directory, not a random temporary path, unless the user explicitly wants a temporary session.
-- Keep `3ue` credentials in `.auth/3ue-credentials.json` so future runs in the same project can reuse them.
-- Use the same persistent profile throughout a run for stability.
-- If the user only asks for round 1 or round 2, run only the requested scope, but still organize files in the run folder.
-- When manual review is requested, do not replace page-by-page review with a blind batch script.
+- Chrome profile 要保存在当前项目目录里，不要随便用临时目录，除非用户明确要求临时会话
+- `3ue` 凭证固定保存在 `.auth/3ue-credentials.json`
+- 整个运行过程中尽量复用同一个持久化 profile
+- 如果用户只要求跑第一轮或第二轮，就按用户要求缩小范围，但仍然要整理好 run 目录
+- 如果用户要求人工逐页核查，不要用盲跑脚本替代第三轮人工检查
