@@ -28,9 +28,7 @@ description: "当用户提供外链或域名列表并要求筛选时使用。该
 
 - 所有浏览器自动化都使用 [$playwright-stealth-cli](/Users/mac/.codex/skills/playwright-stealth-cli/SKILL.md)
 - 全程走 CLI 工作流，不要切换到普通 Playwright 工作流
-- 必须使用品牌版 Chrome，也就是 `--channel chrome`，不要用默认的 Chromium
-- 默认使用有头模式，除非用户明确要求无头，或当前步骤已经验证无头稳定可用
-- 优先使用保存在当前项目目录下的持久化 Chrome profile
+- 优先使用保存在当前项目目录下的持久化浏览器 profile
 
 ## 固定平台
 
@@ -138,7 +136,7 @@ description: "当用户提供外链或域名列表并要求筛选时使用。该
 使用 Semrush 的 `流量与市场 -> 行业与批量分析`。
 
 执行顺序：
-1. 用当前项目下的持久化 Chrome profile 打开平台
+1. 用当前项目下的持久化浏览器 profile 打开平台
 2. 如有需要，用保存的 `3ue` 凭证登录
 3. 进入批量分析页面
 4. 上传当前批次 CSV
@@ -279,7 +277,7 @@ description: "当用户提供外链或域名列表并要求筛选时使用。该
 
 ## 备注
 
-- Chrome profile 要保存在当前项目目录里，不要随便用临时目录，除非用户明确要求临时会话
+- 浏览器 profile 要保存在当前项目目录里，不要随便用临时目录，除非用户明确要求临时会话
 - `3ue` 凭证固定保存在 `.auth/3ue-credentials.json`
 - 整个运行过程中尽量复用同一个持久化 profile
 - 如果用户只要求跑第一轮或第二轮，就按用户要求缩小范围，但仍然要整理好 run 目录
