@@ -23,7 +23,7 @@ description: "当用户提供外链或域名列表并要求筛选时使用。该
 
 - 所有浏览器自动化都使用 [$playwright-stealth-cli](/Users/mac/.codex/skills/playwright-stealth-cli/SKILL.md)
 - 全程走 CLI 工作流，不要切换到普通 Playwright 工作流
-- 必须使用品牌版 Chrome，也就是 `--channel chrome`，不要用默认 Chromium
+- 必须使用品牌版 Chrome，也就是 `--channel chrome`，不要用默认的 Chromium
 - 优先使用保存在当前项目目录下的持久化 Chrome profile
 
 ## 固定平台
@@ -118,7 +118,7 @@ description: "当用户提供外链或域名列表并要求筛选时使用。该
 4. 上传当前批次 CSV
 5. 只有当左侧富文本输入区已经自动回填域名时，才算上传真正成功
 6. 不要只看右侧 `文件已上传`
-7. 左侧回填后，必须再点击一次左侧富文本输入区，触发 `focus`
+7. ⚠️ 左侧回填后，**必须再点击一次左侧富文本输入区**，触发 `focus`
 8. 只有完成上一步后，才点击 `分析`
 9. 等待结果表变成可读状态
 10. 导出当前批次原始结果
